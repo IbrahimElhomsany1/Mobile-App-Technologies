@@ -7,6 +7,7 @@ import { useState } from 'react';
 import Lab2 from './components/Lab2';
 import Item from './components/Item';
 import Items from './components/Items';
+import PlayerGame from './components/PlayerGame'
 
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
@@ -16,7 +17,8 @@ export default function App() {
   return (
      <SafeAreaView style={styles.container}>
     {/* <Lab2/> */}
-  <Items/>
+  <PlayerGame/>
+
     
      
    </SafeAreaView>
