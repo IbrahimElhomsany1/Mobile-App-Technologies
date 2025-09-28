@@ -1,9 +1,13 @@
-import { StyleSheet, Text, View, Button } from 'react-native'
+import { StyleSheet, Text, View, TouchableOpacity } from 'react-native'
 import React, { useState } from 'react'
 
 const ClassWork2 = () => {
-  const [currentNumber, setCurrentNumber] = useState(0)
-  const [winner, setWinner] = useState('None')
+  const [numbers, setNumbers] = useState({
+    player1: null,
+    player2: null,
+    player3: null,
+    player4: null,
+  })
 
   const [scores, setScores] = useState({
     player1: 0,
@@ -12,64 +16,107 @@ const ClassWork2 = () => {
     player4: 0,
   })
 
-  const [turn, setTurn] = useState(1) // keep track of which player's turn it is (1-4)
+  const [turn, setTurn] = useState(1) // current player's turn
 
   const generateRandomNumber = () => Math.floor(Math.random() * 100) + 1
 
   const handlePress = (player) => {
-    if (player !== turn) return // only allow correct player to press
+    if (player !== turn) return // only allow correct turn
 
     const number = generateRandomNumber()
-    setCurrentNumber(number)
 
-    setScores((prevScores) => ({
-      ...prevScores,
-      [`player${player}`]: prevScores[`player${player}`] + number,
+    setNumbers((prev) => {
+      const updated = {
+        ...prev,
+        [`player${player}`]: number,
+      }
+
+      // If last player played → check winner automatically
+      if (player === 4) {
+        checkRoundWinner(updated)
+        setTurn(1) // reset to player 1
+      } else {
+        setTurn(player + 1)
+      }
+
+      return updated
+    })
+  }
+
+  const checkRoundWinner = (roundNumbers) => {
+    const maxNumber = Math.max(...Object.values(roundNumbers))
+    const winner = Object.keys(roundNumbers).find(
+      (player) => roundNumbers[player] === maxNumber
+    )
+
+    setScores((prev) => ({
+      ...prev,
+      [winner]: prev[winner] + 1,
     }))
 
-    // move to next player's turn
-    setTurn(player === 4 ? 1 : player + 1)
-
-    // check winner (example: first to 200 points wins)
-    if (scores[`player${player}`] + number >= 200) {
-      setWinner(`Player ${player}`)
-    }
+    // reset for next round
+    setNumbers({
+      player1: null,
+      player2: null,
+      player3: null,
+      player4: null,
+    })
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>🎮 4 Player Random Number Game 🎮</Text>
-      <Text style={styles.subtitle}>Current Number: {currentNumber}</Text>
-      <Text style={styles.subtitle}>Winner: {winner}</Text>
+      {/* Player buttons */}
+      <TouchableOpacity
+        style={[styles.playerButton, styles.top]}
+        onPress={() => handlePress(1)}
+        disabled={turn !== 1}
+      >
+        <Text style={styles.btnText}>Player 1</Text>
+      </TouchableOpacity>
 
-      <View style={styles.scores}>
-        <Text>Player 1: {scores.player1}</Text>
-        <Text>Player 2: {scores.player2}</Text>
-        <Text>Player 3: {scores.player3}</Text>
-        <Text>Player 4: {scores.player4}</Text>
+      <TouchableOpacity
+        style={[styles.playerButton, styles.right]}
+        onPress={() => handlePress(2)}
+        disabled={turn !== 2}
+      >
+        <Text style={styles.btnText}>Player 2</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[styles.playerButton, styles.bottom]}
+        onPress={() => handlePress(3)}
+        disabled={turn !== 3}
+      >
+        <Text style={styles.btnText}>Player 3</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[styles.playerButton, styles.left]}
+        onPress={() => handlePress(4)}
+        disabled={turn !== 4}
+      >
+        <Text style={styles.btnText}>Player 4</Text>
+      </TouchableOpacity>
+
+      {/* Number boxes */}
+      <View style={styles.boxContainer}>
+        {Object.entries(numbers).map(([player, number]) => (
+          <View key={player} style={styles.box}>
+            <Text style={styles.boxText}>
+              {player}: {number !== null ? number : '-'}
+            </Text>
+          </View>
+        ))}
       </View>
 
-      <View style={styles.buttons}>
-        <Button
-          title="Player 1"
-          onPress={() => handlePress(1)}
-          disabled={turn !== 1 || winner !== 'None'}
-        />
-        <Button
-          title="Player 2"
-          onPress={() => handlePress(2)}
-          disabled={turn !== 2 || winner !== 'None'}
-        />
-        <Button
-          title="Player 3"
-          onPress={() => handlePress(3)}
-          disabled={turn !== 3 || winner !== 'None'}
-        />
-        <Button
-          title="Player 4"
-          onPress={() => handlePress(4)}
-          disabled={turn !== 4 || winner !== 'None'}
-        />
+      {/* Show scores */}
+      <View style={styles.scoreContainer}>
+        <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Scores</Text>
+        {Object.entries(scores).map(([player, score]) => (
+          <Text key={player} style={{ fontSize: 16 }}>
+            {player}: {score}
+          </Text>
+        ))}
       </View>
     </View>
   )
@@ -82,25 +129,50 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
   },
-  title: {
-    fontSize: 22,
+
+  // Player button styles
+  playerButton: {
+    position: 'absolute',
+    padding: 15,
+    backgroundColor: '#4CAF50',
+    borderRadius: 10,
+  },
+  btnText: {
+    color: 'white',
     fontWeight: 'bold',
-    marginBottom: 10,
   },
-  subtitle: {
-    fontSize: 18,
-    marginVertical: 5,
+  top: { top: 40, alignSelf: 'center' },
+  right: { right: 20, top: '45%' },
+  bottom: { bottom: 40, alignSelf: 'center' },
+  left: { left: 20, top: '45%' },
+
+  // Boxes for numbers
+  boxContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginVertical: 20,
+    flexWrap: 'wrap',
+    gap: 10,
   },
-  scores: {
+  box: {
+    width: 80,
+    height: 80,
+    borderWidth: 2,
+    borderColor: 'black',
+    justifyContent: 'center',
+    alignItems: 'center',
+    margin: 5,
+  },
+  boxText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+
+  // Scores
+  scoreContainer: {
     marginVertical: 15,
     alignItems: 'center',
   },
-  buttons: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    justifyContent: 'center',
-  },
 })
+
