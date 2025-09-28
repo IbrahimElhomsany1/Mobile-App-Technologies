@@ -17,6 +17,7 @@ const ClassWork2 = () => {
   })
 
   const [turn, setTurn] = useState(1) // current player's turn
+  const [roundWinner, setRoundWinner] = useState(null) // highlight winner
 
   const generateRandomNumber = () => Math.floor(Math.random() * 100) + 1
 
@@ -34,7 +35,6 @@ const ClassWork2 = () => {
       // If last player played → check winner automatically
       if (player === 4) {
         checkRoundWinner(updated)
-        setTurn(1) // reset to player 1
       } else {
         setTurn(player + 1)
       }
@@ -54,13 +54,19 @@ const ClassWork2 = () => {
       [winner]: prev[winner] + 1,
     }))
 
-    // reset for next round
-    setNumbers({
-      player1: null,
-      player2: null,
-      player3: null,
-      player4: null,
-    })
+    setRoundWinner(winner)
+
+    // Reset for next round after 2 seconds (so numbers are visible)
+    setTimeout(() => {
+      setNumbers({
+        player1: null,
+        player2: null,
+        player3: null,
+        player4: null,
+      })
+      setRoundWinner(null)
+      setTurn(1) // restart with player 1
+    }, 2000)
   }
 
   return (
@@ -69,7 +75,7 @@ const ClassWork2 = () => {
       <TouchableOpacity
         style={[styles.playerButton, styles.top]}
         onPress={() => handlePress(1)}
-        disabled={turn !== 1}
+        disabled={turn !== 1 || roundWinner}
       >
         <Text style={styles.btnText}>Player 1</Text>
       </TouchableOpacity>
@@ -77,7 +83,7 @@ const ClassWork2 = () => {
       <TouchableOpacity
         style={[styles.playerButton, styles.right]}
         onPress={() => handlePress(2)}
-        disabled={turn !== 2}
+        disabled={turn !== 2 || roundWinner}
       >
         <Text style={styles.btnText}>Player 2</Text>
       </TouchableOpacity>
@@ -85,7 +91,7 @@ const ClassWork2 = () => {
       <TouchableOpacity
         style={[styles.playerButton, styles.bottom]}
         onPress={() => handlePress(3)}
-        disabled={turn !== 3}
+        disabled={turn !== 3 || roundWinner}
       >
         <Text style={styles.btnText}>Player 3</Text>
       </TouchableOpacity>
@@ -93,7 +99,7 @@ const ClassWork2 = () => {
       <TouchableOpacity
         style={[styles.playerButton, styles.left]}
         onPress={() => handlePress(4)}
-        disabled={turn !== 4}
+        disabled={turn !== 4 || roundWinner}
       >
         <Text style={styles.btnText}>Player 4</Text>
       </TouchableOpacity>
@@ -101,7 +107,13 @@ const ClassWork2 = () => {
       {/* Number boxes */}
       <View style={styles.boxContainer}>
         {Object.entries(numbers).map(([player, number]) => (
-          <View key={player} style={styles.box}>
+          <View
+            key={player}
+            style={[
+              styles.box,
+              roundWinner === player ? styles.winnerBox : null,
+            ]}
+          >
             <Text style={styles.boxText}>
               {player}: {number !== null ? number : '-'}
             </Text>
@@ -164,6 +176,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     margin: 5,
   },
+  winnerBox: {
+    borderColor: 'gold',
+    borderWidth: 3,
+    backgroundColor: '#fffae6',
+  },
   boxText: {
     fontSize: 16,
     fontWeight: 'bold',
@@ -175,4 +192,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 })
+
 
